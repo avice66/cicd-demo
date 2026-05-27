@@ -1,0 +1,26 @@
+name: First Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  system_info:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - name: Run system info commands
+        run: |
+          hostname
+          whoami
+          docker --version
+
+  simple_test:
+    needs: system_info
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - name: Create and read artifact
+        run: |
+          echo "Hello CI" > artifact.txt
+          cat artifact.txt
