@@ -79,10 +79,16 @@ jobs:
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
           ssh -i ~/.ssh/id_rsa $USER@$HOST "
-            echo '$REGISTRY_TOKEN' | docker login ghcr.io -u '$REGISTRY_USER' --password-stdin && \
+            echo '$REGISTRY_TOKEN' | \
+              docker login ghcr.io \
+              -u '$REGISTRY_USER' \
+              --password-stdin && \
             docker stop my-python-app || true && \
             docker rm my-python-app || true && \
             docker pull ghcr.io/avice66/cicd-demo:latest && \
-            docker run -d --name my-python-app -p 80:3010 ghcr.io/avice66/cicd-demo:latest
+            docker run -d \
+              --name my-python-app \
+              -p 80:3010 \
+              ghcr.io/avice66/cicd-demo:latest
           "
           rm -f ~/.ssh/id_rsa
