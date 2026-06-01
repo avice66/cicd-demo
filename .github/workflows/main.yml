@@ -1,4 +1,4 @@
-name: CI Security, Testing and Docker Build
+name: CI/CD Pipeline - Security, Testing, Build and Deploy
 
 on: [push]
 
@@ -58,3 +58,31 @@ jobs:
         run: |
           docker push ghcr.io/avice66/cicd-demo:latest
           docker push ghcr.io/avice66/cicd-demo:${{ github.run_number }}
+
+  # --- СТАДИЯ DEPLOY ---
+  deploy_to_test:
+    runs-on: [self-hosted, Linux, X64]
+    needs: docker_build
+    steps:
+      - name: Deploy Application via SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: ${{ vars.TARGET_HOST }}
+          USER: ${{ vars.TARGET_USER }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/id_rsa $USER@$HOST "
+            echo '$REGISTRY_TOKEN' | docker login ghcr.io -u '$REGISTRY_USER' --password-stdin && \
+            docker stop my-python-app || true && \
+            docker rm my-python-app || true && \
+            docker pull ghcr.io/avice66/cicd-demo:latest && \
+            docker run -d --name my-python-app -p 80:3010 ghcr.io/avice66/cicd-demo:latest
+          "
+          rm -f ~/.ssh/id_rsa
