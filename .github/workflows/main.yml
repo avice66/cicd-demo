@@ -1,4 +1,4 @@
-name: CI Security and Testing
+name: CI Security, Testing and Docker Build
 
 on: [push]
 
@@ -9,7 +9,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Run Bash Lint
         run: shellcheck deploy.sh
 
@@ -18,7 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Run YAML Lint
         run: yamllint .
 
@@ -29,6 +27,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Run Python Unit Tests
         run: pytest-3 test_app.py
+
+  # --- СТАДИЯ BUILD (Новая задача по ТЗ) ---
+  docker_build:
+    runs-on: [self-hosted, build] # Используем добавленный тег build
+    needs: python_unit_test       # Запуск строго после успешных тестов
+    permissions:                  # Разрешаем раннеру записывать пакеты в реестр
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ghcr.io/avice66/cicd-demo:latest \
+            -t ghcr.io/avice66/cicd-demo:${{ github.run_number }} .
+
+      - name: Push Docker Image to Registry
+        run: |
+          docker push ghcr.io/avice66/cicd-demo:latest
+          docker push ghcr.io/avice66/cicd-demo:${{ github.run_number }}
