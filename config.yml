@@ -3,4 +3,3 @@ environment: "development"
 settings:
   debug: true
   retries: 3
-
