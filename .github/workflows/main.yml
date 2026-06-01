@@ -1,26 +1,34 @@
-name: First Pipeline
+name: CI Security and Testing
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+on: [push]
 
 jobs:
-  system_info:
+  # --- СТАДИЯ LINT ---
+  bash_lint:
     runs-on: [self-hosted, Linux, X64]
     steps:
-      - name: Run system info commands
-        run: |
-          hostname
-          whoami
-          docker --version
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  simple_test:
-    needs: system_info
+      - name: Run Bash Lint
+        run: shellcheck deploy.sh
+
+  yaml_lint:
     runs-on: [self-hosted, Linux, X64]
     steps:
-      - name: Create and read artifact
-        run: |
-          echo "Hello CI" > artifact.txt
-          cat artifact.txt
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run YAML Lint
+        run: yamllint .
+
+  # --- СТАДИЯ TEST ---
+  python_unit_test:
+    runs-on: [self-hosted, Linux, X64]
+    needs: [bash_lint, yaml_lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Python Unit Tests
+        run: pytest-3 test_app.py
