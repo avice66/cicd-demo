@@ -54,14 +54,11 @@ jobs:
               fi
             done
             echo "Found free port: $PORT"
-            
             CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
-            
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
             docker run -d --name $CONTAINER_NAME -p $PORT:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
 
-  # Раздел 2. Добавление джобы очистки (Stop Review)
   stop_review:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
@@ -71,11 +68,3 @@ jobs:
     steps:
       - name: Stop and Remove Review App from Test Server
         uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.TARGET_HOST }}
-          username: devops_engineer
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
-            echo "Stopping and removing container: $CONTAINER_NAME"
-            docker rm -f $CONTAINER_NAME || true
