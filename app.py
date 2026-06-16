@@ -9,7 +9,7 @@ class MyHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
         result = add_numbers(2, 3)
-        self.wfile.write(b"Hello World v2 - Production Ready")
+        self.wfile.write(b"Hello World v5 - Dynamic Review App!")
 
 if __name__ == "__main__":
     server = HTTPServer(("0.0.0.0", 3010), MyHandler)
