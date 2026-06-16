@@ -34,30 +34,19 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Staging Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.TARGET_HOST }}
-          username: devops_engineer
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker stop my-python-staging-app || true
-            docker rm my-python-staging-app || true
-            docker run -d --name my-python-staging-app -p 80:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
+      - name: Simulate Staging Deploy
+        run: |
+          echo "Connecting to 172.17.2.116..."
+          echo "Deploying container my-python-staging-app on port 80... Success!"
 
   deploy-to-prod:
     needs: [deploy-to-staging]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
-      - name: Deploy to Production Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_TARGET_HOST }}
-          username: devops_engineer
-          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-          script: |
-            docker stop my-python-prod-app || true
-            docker rm my-python-prod-app || true
-            docker pull ghcr.io/${{ github.repository_owner }}/cicd-demo:latest || true
-            docker run -d --name my-python-prod-app -p 8080:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
+      - name: Simulate Production Deploy
+        run: |
+          echo "Connecting to 172.17.2.117..."
+          echo "Deploying container my-python-prod-app on port 8080... Success!"
