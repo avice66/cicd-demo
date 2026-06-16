@@ -30,10 +30,9 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
 
-  # Раздел 1. Динамическое окружение (Deploy Review)
   deploy_review:
     needs: [build]
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: review/pr-${{ github.event.number }}
@@ -54,20 +53,16 @@ jobs:
               fi
             done
             echo "Found free port: $PORT"
-            
             CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
-            
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
             docker run -d --name $CONTAINER_NAME -p $PORT:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
 
-  # Раздел 2. Добавление джобы очистки (Stop Review)
   stop_review:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     environment:
       name: review/pr-${{ github.event.number }}
-      action: teardown
     steps:
       - name: Stop and Remove Review App from Test Server
         uses: appleboy/ssh-action@master
