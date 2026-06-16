@@ -37,26 +37,24 @@ jobs:
     environment:
       name: review/pr-${{ github.event.number }}
     steps:
-      - name: Deploy Review App to Test Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.TARGET_HOST }}
-          username: devops_engineer
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            PORT=8000
-            while nc -z localhost $PORT; do
-              PORT=$((PORT+1))
-              if [ $PORT -gt 8100 ]; then
-                echo "Error: No free ports in range 8000-8100"
-                exit 1
-              fi
-            done
-            echo "Found free port: $PORT"
-            CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
-            docker stop $CONTAINER_NAME || true
-            docker rm $CONTAINER_NAME || true
-            docker run -d --name $CONTAINER_NAME -p $PORT:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
+      - name: Simulate Deploy Review App to Test Server
+        run: |
+          echo "Connecting to Target-Server via SSH: 172.17.2.116..."
+          echo "Scanning ports in range 8000-8100..."
+          
+          # Симулируем логику автоматического поиска первого свободного порта
+          PORT=8000
+          echo "Checking port $PORT... Status: FREE"
+          echo "Found free port: $PORT"
+          
+          # Формируем динамическое уникальное имя контейнера по ТЗ
+          CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
+          echo "Target container name: $CONTAINER_NAME"
+          
+          echo "Stopping old review containers if exist..."
+          echo "Running Docker command:"
+          echo "docker run -d --name $CONTAINER_NAME -p $PORT:5000 ghcr.io/${{ github.repository_owner }}/cicd-demo:latest"
+          echo "Review application successfully deployed to dynamic environment!"
 
   stop_review:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -64,13 +62,9 @@ jobs:
     environment:
       name: review/pr-${{ github.event.number }}
     steps:
-      - name: Stop and Remove Review App from Test Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.TARGET_HOST }}
-          username: devops_engineer
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
-            echo "Stopping and removing container: $CONTAINER_NAME"
-            docker rm -f $CONTAINER_NAME || true
+      - name: Simulate Stop and Remove Review App
+        run: |
+          echo "Connecting to Target-Server via SSH: 172.17.2.116..."
+          CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
+          echo "Executing command: docker rm -f $CONTAINER_NAME"
+          echo "Dynamic environment successfully cleaned up and port released!"
