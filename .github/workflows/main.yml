@@ -30,7 +30,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/cicd-demo:latest
 
-  # Раздел 1. Динамическое окружение (Deploy Review)
   deploy_review:
     needs: [build]
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
@@ -68,3 +67,11 @@ jobs:
     steps:
       - name: Stop and Remove Review App from Test Server
         uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TARGET_HOST }}
+          username: devops_engineer
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            CONTAINER_NAME="my-app-pr-${{ github.event.number }}"
+            echo "Stopping and removing container: $CONTAINER_NAME"
+            docker rm -f $CONTAINER_NAME || true
